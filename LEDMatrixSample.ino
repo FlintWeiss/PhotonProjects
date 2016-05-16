@@ -190,7 +190,7 @@ void scrollText(String& text) {
 
     matrix.fillScreen(0);
     matrix.setCursor(0, 0);
-    matrix.print("Hyl"); matrix.show(); delay(5000);
+//    matrix.print("Hyl"); matrix.show(); delay(5000);
   
   for(int i=0; i<=iterations; i++) {
     //Serial.print("Scroll Text iteration: "); Serial.println(i);
