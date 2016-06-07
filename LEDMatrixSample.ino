@@ -97,6 +97,8 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(11,9,1,1, PIXEL_PIN,
 const uint16_t colors[] = {
   matrix.Color(128, 25, 0), matrix.Color(5, 179, 5), matrix.Color(0, 98, 209) };
 
+String webText = "@ the House of Fur!";
+
 //-------------------------------------------------------------------------------
 void setup() {
    // turn off all the pixels in the strip, even the overflow pixels that 
@@ -108,9 +110,23 @@ void setup() {
   matrix.setTextWrap(false);
   matrix.setBrightness(20);
   matrix.setTextColor(matrix.Color(80,80,0));
+  
+  Particle.function("passText", handleText);
+  Particle.variable("messageText", &webText, STRING);
+
 } // end setup
 
-
+//--------------------------------------------------------------------------------
+// handler for the passText function
+// saves the text to a local var and then puts the current message back to the
+// cloud for remote read
+int handleText(String actualText) {
+    Serial.print("Message received:");
+    Serial.println(actualText);
+    webText = actualText;
+    Particle.variable("messageText", &webText, STRING);
+    return 0;
+}
 
 //--------------------------------------------------------------------------------
 void loop() {
@@ -124,6 +140,7 @@ void loop() {
   
   // figure ou the matrix addressing model
   //Serial.println("left to right, top to bottom wipe");
+  // left to right, top to bottom wipe
   int x,y;
   for(y=0; y<9; y++) {
      for(x=0; x<11; x++) { 
@@ -137,7 +154,6 @@ void loop() {
   }
   
  
-
   matrix.fillScreen(0); delay(500);
   
   // fix the screen with green 
@@ -170,11 +186,11 @@ void loop() {
    delay(500); 
    matrix.fillScreen(0); delay(500);
     
-    String message = "@ the House of Fur!";
-    scrollText(message);
+    Serial.println(webText);
+    scrollText(webText);
 
    delay(100);
-}
+} // end loop
 
 
 //==========================================================================
@@ -182,8 +198,7 @@ void loop() {
 //==========================================================================
 void scrollText(String& text) {
    int w    = matrix.width();
-   int pass = 0;
-   String message = "Hello World";
+   //String message = "Hello World";
 
    int len = text.length();
    int iterations = (len+2) * 6; // font is 6 wide x 8 tall
@@ -198,12 +213,7 @@ void scrollText(String& text) {
     matrix.setCursor(w, 0);
     matrix.print(text);
     --w; // decrement w to scroll to the left
-//    if(--w < -(iterations)) {
-//      Serial.print("w: "); Serial.println(w);
-//      w = matrix.width();
-      //if(++pass >= 3) pass = 0;
-      //matrix.setTextColor(colors[pass]);
-//    } // end if 
+
     matrix.show();   delay(100);
   } // end for
   
