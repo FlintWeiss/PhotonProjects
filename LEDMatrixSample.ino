@@ -159,8 +159,8 @@ void loop() {
  
   matrix.fillScreen(0); delay(500);
   
-  // fix the screen with green 
-   matrix.fillRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(0, 70, 0)); matrix.show();
+  // fix the screen with purple 
+   matrix.fillRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(153, 50, 204)); matrix.show();
    delay(500); 
    matrix.fillScreen(0); delay(500);
  
@@ -188,7 +188,7 @@ void loop() {
    matrix.show();
    
    
-   delay(3500); 
+   delay(500); 
    matrix.fillScreen(0); delay(500); 
     
    // draw a blue circle 
@@ -201,6 +201,25 @@ void loop() {
    /*matrix.fillCircle(5, 4, 4, matrix.Color(70, 0, 70)); matrix.show();
    delay(500); 
    matrix.fillScreen(0); delay(500); */
+    
+    //rainbowCycle(10);
+    //rainboxCycleFirstCol(10);
+    //rainbow(10);
+    
+    //for(int j=0; i<256; j++) {
+      for(int i=0; i<32; i++) {
+        matrix.setPixelColor(i, matrix.Color(70,0,255));
+      }
+      matrix.show();
+      delay(500);
+      
+      for(int i=0; i<32; i++) {
+        matrix.setPixelColor(i, matrix.Color(70,0,70));
+      }
+      matrix.show();
+      delay(500);
+    //} // end for j
+    
     
     Serial.println(webText);
     scrollText(webText);
@@ -236,6 +255,56 @@ void scrollText(String& text) {
   
 } // end scrollText
 
+//==========================================================================
+// rainbow
+void rainbow(uint8_t wait) {
+  uint16_t i, j;
+
+  Serial.println("-rainbow");
+  for(j=0; j<(256); j++) {
+    //for(i=0; i<matrix.numPixels(); i++) {
+    //Serial.print("j: "); Serial.println(j);
+    for(i=0; i<200; i++) {
+      //matrix.setPixelColor(i, Wheel((i+j) & 255));
+      matrix.setPixelColor(i, matrix.Color(255,0,j&255));
+      //Serial.print(" - Pixel: "); Serial.println(i);
+    }
+    matrix.show();
+    delay(wait);
+  }
+} // end rainbow
+
+//==========================================================================
+// rainbowCycleFirstCol
+//==========================================================================
+void rainbowCycleFirstCol(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
+    //for(i=0; i< matrix.numPixels(); i++) {
+    for(i=0; i< 100; i++) {
+      //matrix.setPixelColor(i, Wheel(((i * 256 / matrix.numPixels()) + j) & 255));
+      matrix.setPixelColor(i, Wheel(((i * 256 / 16) + j) & 255));
+    }
+    matrix.show();
+    delay(wait);
+  }
+} // end rainbowCycle
+
+//==========================================================================
+// rainbowCycle - makes a rainbow equally distributed throughout the strand
+//==========================================================================
+void rainbowCycle(uint8_t wait) {
+  uint16_t i, j;
+
+  for(j=0; j<256*2; j++) { // 5 cycles of all colors on wheel
+    for(i=0; i< matrix.numPixels(); i++) {
+      matrix.setPixelColor(i, Wheel(((i * 256 / matrix.numPixels()) + j) & 255));
+    }
+    matrix.show();
+    delay(wait);
+  }
+} // end rainbowCycle
 
 
 //==========================================================================
@@ -249,6 +318,23 @@ void colorWipe(uint32_t c, uint8_t wait) {
   }
 } // end colorWipe
 
+//==========================================================================
+// Wheel: Input a value 0 to 255 to get a color value.
+// The colours are a transition r - g - b - back to r.
+//==========================================================================
+uint32_t Wheel(byte WheelPos) {
+  WheelPos = 255 - WheelPos;
+  if(WheelPos < 85) {
+    return matrix.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+  }
+  if(WheelPos < 170) {
+    WheelPos -= 85;
+    return matrix.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+  }
+  WheelPos -= 170;
+  return matrix.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+} // end Wheel
+
 
 /*==========================================================================
    turn all the lights off 
@@ -260,3 +346,6 @@ void lightsOff() {
   }
   matrix.show();
 } // end lightsOff;
+
+
+
