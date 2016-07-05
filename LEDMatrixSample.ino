@@ -42,7 +42,10 @@
 #include "application.h"
 #include "neomatrix/neomatrix.h"
 
-#define PIXEL_COUNT 100
+#define PIXEL_COUNT 200
+
+#define NUM_COL 25
+#define NUM_ROW 8
 
 // IMPORTANT: Set pixel PIN and TYPE
 #define PIXEL_PIN D2
@@ -89,7 +92,7 @@
 // There's only one matrix here, so it doesn't matter if we declare it in row
 // or column order.  
 
-Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(11,9,1,1, PIXEL_PIN,
+Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(NUM_COL,NUM_ROW,1,1, PIXEL_PIN,
   NEO_TILE_TOP   + NEO_TILE_LEFT   + NEO_TILE_ROWS   + NEO_TILE_PROGRESSIVE +
   NEO_MATRIX_TOP + NEO_MATRIX_LEFT + NEO_MATRIX_COLUMNS + NEO_MATRIX_ZIGZAG,
   PIXEL_TYPE);
@@ -97,7 +100,7 @@ Adafruit_NeoMatrix matrix = Adafruit_NeoMatrix(11,9,1,1, PIXEL_PIN,
 const uint16_t colors[] = {
   matrix.Color(128, 25, 0), matrix.Color(5, 179, 5), matrix.Color(0, 98, 209) };
 
-String webText = "@ the House of Fur!";
+String webText = "@ the House of Fur! ygjYGJ";
 
 //-------------------------------------------------------------------------------
 void setup() {
@@ -133,7 +136,7 @@ void loop() {
   matrix.fillScreen(0);
   
   //Serial.println("Color Wipe in pixel order");
-  colorWipe(matrix.Color(50,0,50), 25);
+  colorWipe(matrix.Color(50,0,50), 15);
   delay(500);
   
   matrix.fillScreen(0);
@@ -142,49 +145,62 @@ void loop() {
   //Serial.println("left to right, top to bottom wipe");
   // left to right, top to bottom wipe
   int x,y;
-  for(y=0; y<9; y++) {
-     for(x=0; x<11; x++) { 
+  for(y=0; y<NUM_ROW; y++) {
+     for(x=0; x<NUM_COL; x++) { 
          //Serial.print("X: "); Serial.print(x); Serial.print("; Y: "); Serial.println(y);
          matrix.drawPixel(x,y,matrix.Color(0,128,128));   
          matrix.show();
-         delay(25);
+         delay(15);
      } 
      //Serial.println("-----------");
       
-  }
+  } // end loop
   
  
   matrix.fillScreen(0); delay(500);
   
   // fix the screen with green 
-   matrix.fillRect(0, 0, 11, 9, matrix.Color(0, 70, 0)); matrix.show();
+   matrix.fillRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(0, 70, 0)); matrix.show();
    delay(500); 
    matrix.fillScreen(0); delay(500);
  
  
    // draw a box in yellow 
    // drawRect parameters: x,y starting cooridnates, then width and height, then color
-   matrix.drawRect(0, 0, 11, 9, matrix.Color(70, 70, 0)); matrix.show();
+   matrix.drawRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(70, 70, 0)); matrix.show();
    delay(500); 
    matrix.fillScreen(0); delay(500);
     
    // draw an 'X' in red 
-   matrix.drawLine(1, 0, 9, 8, matrix.Color(70, 0, 0)); 
-   matrix.drawLine(9, 0, 1, 8, matrix.Color(70, 0, 0)); 
+   // Use the number of rows to force a "square X"
+   int xHeight = NUM_ROW - 1;
+   int xWidth  = NUM_ROW - 1;
+   int xStart  = 0;
+   matrix.drawLine(xStart, 0, xWidth, xHeight, matrix.Color(70, 0, 0)); matrix.drawLine(xHeight, 0, xStart, xWidth, matrix.Color(70, 0, 0));
+   // Put another X next to the previous one
+   
+   xStart  = xWidth + 1;
+   matrix.drawLine(xStart, 0, xStart+xWidth, xHeight, matrix.Color(0, 0, 70)); matrix.drawLine(xStart+xWidth, 0, xStart, xHeight, matrix.Color(0, 0, 70)); 
    matrix.show();
-   delay(500); 
-   matrix.fillScreen(0); delay(500);
+
+   xStart  = xStart + xWidth + 1;
+   matrix.drawLine(xStart, 0, xStart+xWidth, xHeight, matrix.Color(70, 70, 70)); matrix.drawLine(xStart+xWidth, 0, xStart, xHeight, matrix.Color(70, 70, 70)); 
+   matrix.show();
+   
+   
+   delay(3500); 
+   matrix.fillScreen(0); delay(500); 
     
    // draw a blue circle 
    // drawCircle parameters: x,y center point, then radius and color
-   matrix.drawCircle(5, 4, 3, matrix.Color(0, 0, 70)); matrix.show();
+   /*matrix.drawCircle(5, 4, 3, matrix.Color(0, 0, 70)); matrix.show();
    delay(500); 
-   matrix.fillScreen(0); delay(500);
+   matrix.fillScreen(0); delay(500); */
     
    // fill a violet circle 
-   matrix.fillCircle(5, 4, 4, matrix.Color(70, 0, 70)); matrix.show();
+   /*matrix.fillCircle(5, 4, 4, matrix.Color(70, 0, 70)); matrix.show();
    delay(500); 
-   matrix.fillScreen(0); delay(500);
+   matrix.fillScreen(0); delay(500); */
     
     Serial.println(webText);
     scrollText(webText);
@@ -244,6 +260,3 @@ void lightsOff() {
   }
   matrix.show();
 } // end lightsOff;
-
-
-
