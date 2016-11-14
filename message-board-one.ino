@@ -2,6 +2,8 @@
 #include "neopixel/neopixel.h"
 #include "neomatrix/neomatrix.h"
 #include "Adafruit_GFX/Adafruit_GFX.h"
+#include "ColorDefinitions.h"
+#include "SpriteBitmaps.h"
 
 /*-------------------------------------------------------------------------
   Message Board One: an internet connected message board for use in my office.
@@ -37,6 +39,7 @@
 #define PIXEL_PIN D2
 #define PIXEL_TYPE WS2811 // set this to get RGB values even though it is 400KHZ
 
+#define LIGHT_POWER_RELAY_PIN D6
 
 // create a reference to the whole strand, including overflow pixels not used in the matrix
 // NOTE: I shouldn't have to need this but I currently do b/c I can't quite sort out some
@@ -75,6 +78,8 @@ void setup() {
    matrix.setTextWrap(FALSE);
    matrix.setBrightness(150);
    //matrix.setBrightness(75);
+   
+   pinMode(LIGHT_POWER_RELAY_PIN, OUTPUT);
   
    Particle.function("passText", handleText);
    Particle.variable("messageText", &webText, STRING);
@@ -113,6 +118,8 @@ int handleBoardOn(String actualText) {
     Serial.print("Message received:"); Serial.println(actualText);
     lightUpTheBoard = actualText.toInt();
 
+    powerLights(lightUpTheBoard);
+
     // put back to the cloud for remote read
     Particle.variable("boardOnSt", &lightUpTheBoard, INT);
     return 0;
@@ -126,28 +133,36 @@ void loop() {
    lightsOff(); 
   
    // Color Wipe in pixel order
-   colorWipe(wholeStrip.Color(255,0,0), 3);  delay(500);  lightsOff();
+   colorWipe(wholeStrip.Color(255,0,0), 3, 1);
+   colorWipe(wholeStrip.Color(0,255,0), 3, 0);
+   colorWipe(wholeStrip.Color(0,0,255), 3, 1);  
+   
+   delay(250);  lightsOff();
   
    // color wipe rows left to right and top to bottom
-   testMatrixWipe(); lightsOff(); delay(500);
+   testMatrixWipe(); lightsOff(); delay(250);
 
-   rainbowDART(TRUE, 20, 5); lightsOff(); delay(500); 
+   rainbowDART(TRUE, 20, 2); lightsOff(); delay(250);
 
    // Draw a bunch of rectangles "going down"
-   matrix.drawRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(255, 0, 0)); matrix.show(); delay(1000); 
-   matrix.drawRect(1, 1, NUM_COL-2, NUM_ROW-2, matrix.Color(0, 255, 0)); matrix.show(); delay(1000); 
-   matrix.drawRect(2, 2, NUM_COL-4, NUM_ROW-4, matrix.Color(0, 0, 255)); matrix.show(); delay(1000); 
-   matrix.drawRect(3, 3, NUM_COL-6, NUM_ROW-6, matrix.Color(128, 128, 128)); matrix.show(); delay(1000); 
-   delay(2000);    //lightsOff();
+   matrix.drawRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(255, 0, 0)); matrix.show(); delay(500); 
+   matrix.drawRect(1, 1, NUM_COL-2, NUM_ROW-2, matrix.Color(0, 255, 0)); matrix.show(); delay(500); 
+   matrix.drawRect(2, 2, NUM_COL-4, NUM_ROW-4, matrix.Color(0, 0, 255)); matrix.show(); delay(500); 
+   matrix.drawRect(3, 3, NUM_COL-6, NUM_ROW-6, matrix.Color(128, 128, 128)); matrix.show(); delay(500); 
+   delay(1000);    
   
    // black out the dispaly similarly
-   matrix.drawRect(3, 3, NUM_COL-6, NUM_ROW-6, matrix.Color(0, 0, 0)); matrix.show(); delay(1000); 
-   matrix.drawRect(2, 2, NUM_COL-4, NUM_ROW-4, matrix.Color(0, 0, 0)); matrix.show(); delay(1000); 
-   matrix.drawRect(1, 1, NUM_COL-2, NUM_ROW-2, matrix.Color(0, 0, 0)); matrix.show(); delay(1000); 
-   matrix.drawRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(0, 0, 0)); matrix.show(); delay(1000); 
+   matrix.drawRect(3, 3, NUM_COL-6, NUM_ROW-6, matrix.Color(0, 0, 0)); matrix.show(); delay(500); 
+   matrix.drawRect(2, 2, NUM_COL-4, NUM_ROW-4, matrix.Color(0, 0, 0)); matrix.show(); delay(500); 
+   matrix.drawRect(1, 1, NUM_COL-2, NUM_ROW-2, matrix.Color(0, 0, 0)); matrix.show(); delay(500); 
+   matrix.drawRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(0, 0, 0)); matrix.show(); delay(500); 
+   
+   scrollText(webText); lightsOff(); delay(250); // we do this twice to get more visibility on the message
    
    // glow the whole display through the rainbow
-   rainbow(40, 3); lightsOff(); delay(500);
+   rainbow(20, 1); lightsOff(); delay(250);
+
+   pacman();
 
    // fill the screen with a light color (background)
    matrix.fillRect(0, 0, NUM_COL, NUM_ROW, matrix.Color(30, 30, 30)); matrix.show(); delay(1000); 
@@ -160,19 +175,19 @@ void loop() {
    // Use the number of rows to force a "square X"
    int xHeight = NUM_ROW - 1;    int xWidth  = NUM_ROW - 1;    int xStart  = 0;
    matrix.drawLine(xStart, 0, xWidth, xHeight, matrix.Color(255, 0, 0)); matrix.drawLine(xHeight, 0, xStart, xWidth, matrix.Color(255, 0, 0));
-   matrix.show(); delay(500);
+   matrix.show(); delay(250);
    
    xStart  = xWidth + 1;
    matrix.drawLine(xStart, 0, xStart+xWidth, xHeight, matrix.Color(0, 255, 0)); matrix.drawLine(xStart+xWidth, 0, xStart, xHeight, matrix.Color(0, 255, 0)); 
-   matrix.show(); delay(500);
+   matrix.show(); delay(250);
 
    xStart  = xStart + xWidth + 1;
    matrix.drawLine(xStart, 0, xStart+xWidth, xHeight, matrix.Color(0, 0, 255)); matrix.drawLine(xStart+xWidth, 0, xStart, xHeight, matrix.Color(0, 0, 255)); 
-   matrix.show(); delay(500);
+   matrix.show(); delay(250);
    
-   delay(2500); 
+   delay(1500); 
    
-   lightsOff(); delay(500); 
+   lightsOff(); delay(250); 
     
    // draw a blue circle 
    // drawCircle parameters: x,y center point, then radius and color
@@ -184,15 +199,84 @@ void loop() {
    /* matrix.fillCircle(5, 4, 4, matrix.Color(70, 0, 70)); matrix.show();
    delay(500); 
    matrix.fillScreen(0); delay(500); */
-    
-    
-   //Serial.println(webText);
-   scrollText(webText); lightsOff(); delay(500);
 
-   rainbowCycleHole(20, 5); lightsOff(); delay(500);
+   // Send a theater pixel chase in...
+   theaterChase(wholeStrip.Color(127, 127, 127), 50); // White
+   theaterChase(wholeStrip.Color(127, 0, 0), 50); // Red
+   theaterChase(wholeStrip.Color(0, 0, 127), 50); // Blue
+
+   theaterChaseRainbow(50);
+
+   rainbowDART(TRUE, 20, 2); lightsOff(); delay(250);     
+   
+   boxAnimation(10); lightsOff(); delay(250);
+   
+   scrollText(webText); lightsOff(); delay(250);
+
+   rainbowCycleHole(20, 2); lightsOff(); delay(250);
 
    delay(100);
 } // end loop
+
+
+/*==========================================================================
+  pacman: creates a pacman animation using matrix.drawBitmap animations
+  ==========================================================================
+*/  
+void pacman(){
+
+  // draw yellow dots for pacman to eat
+  for(int i=1; i<NUM_COL; i=i+3) {
+     matrix.drawPixel(i,3, color(GRAY));
+     matrix.show();
+     delay(50);
+  }
+  delay(1000);
+  
+  for(int i=0; i<NUM_COL; i=i+3) {
+     matrix.drawBitmap(i,0, pacmanOpen, 8, 8, color(YELLOW));  matrix.show();
+     delay(30);
+     matrix.drawBitmap(i,0, pacmanOpen, 8, 8, color(BLACK));   matrix.show();
+     delay(20);
+
+     matrix.drawBitmap(i,0, pacmanOpen, 8, 8, color(YELLOW));  matrix.show();
+     delay(30);
+     matrix.drawBitmap(i,0, pacmanOpen, 8, 8, color(BLACK));   matrix.show();
+     delay(20);
+
+     matrix.drawBitmap(i+2,0, pacmanClosed, 8, 8, color(YELLOW)); matrix.show();
+     delay(50);
+     matrix.drawBitmap(i+2,0, pacmanClosed, 8, 8, color(BLACK));  matrix.show();
+     delay(20);
+  }
+  
+} // end pacman
+
+
+void boxAnimation(int numTimes) {
+ 
+   // try a going through space animation, where the interior most box works its way out to the edge
+   for(int i=0; i<numTimes; i++) {
+      matrix.drawRect(0, 0, NUM_COL,   NUM_ROW,   color(BLACK));
+      matrix.drawRect(3, 3, NUM_COL-6, NUM_ROW-6, color(GRAY)); 
+      matrix.show(); delay(100);
+
+      matrix.drawRect(3, 3, NUM_COL-6, NUM_ROW-6, color(BLACK)); 
+      matrix.drawRect(2, 2, NUM_COL-4, NUM_ROW-4, color(GRAY));
+      matrix.show(); delay(100);
+
+      matrix.drawRect(2, 2, NUM_COL-4, NUM_ROW-4, color(BLACK));
+      matrix.drawRect(1, 1, NUM_COL-2, NUM_ROW-2, color(GRAY)); 
+      matrix.show(); delay(100);
+
+      matrix.drawRect(1, 1, NUM_COL-2, NUM_ROW-2, color(BLACK)); 
+      matrix.drawRect(0, 0, NUM_COL,   NUM_ROW,   color(GRAY));
+      matrix.show(); delay(100);
+   }
+
+} // end boxAnimation
+
+
 
 /*==========================================================================
   rainbowDART: print DART" and cycle through the rainbow 
@@ -206,11 +290,14 @@ void rainbowDART(bool clearScreen, int wait, int numTimes) {
 
    if(clearScreen) { matrix.fillScreen(0); }
    
-   matrix.setCursor(1, 0); matrix.setTextColor( matrixWheel(0&255) );
-   matrix.print('D'); matrix.show(); delay(500);
-   matrix.print('A'); matrix.show(); delay(500);
-   matrix.print('R'); matrix.show(); delay(500);
-   matrix.print('T'); matrix.show(); delay(500);
+   matrix.setCursor(1, 0); 
+   // color all letters white except for an oragne A
+   matrix.setTextColor( matrix.Color(255, 255, 255) ); matrix.print('D'); matrix.show(); delay(500);
+   matrix.setTextColor( matrix.Color(251, 79,  20 ) ); matrix.print('A'); matrix.show(); delay(500);
+   matrix.setTextColor( matrix.Color(255, 255, 255) ); matrix.print('R'); matrix.show(); delay(500);
+   matrix.setTextColor( matrix.Color(255, 255, 255) ); matrix.print('T'); matrix.show(); delay(500);
+   
+   delay(2000);
    
    for(int j=0; j<(256*numTimes); j++) {
      matrix.setCursor(1, 0);
@@ -247,7 +334,7 @@ void scrollText(String text) {
       matrix.print(text);
       --w; // decrement w to scroll left
 
-      matrix.show();   delay(70);
+      matrix.show();   delay(30);
    } // end for
   
   
@@ -335,16 +422,78 @@ void rainbowCycleHole(int wait, int numTimes) {
 
 
 
-//==========================================================================
-// Fill the dots one after the other with a color
-//==========================================================================
-void colorWipe(uint32_t c, uint8_t wait) {
-  for(uint16_t i=0; i < wholeStrip.numPixels(); i++) {
-    wholeStrip.setPixelColor(i, c);
-    wholeStrip.show();
-    delay(wait);
-  }
+
+/*==========================================================================
+  Fill the dots one after the other with a color
+  c - color to fill
+  wait - how slow to go
+  forward - should we fill from front or from the back
+  ==========================================================================
+*/
+void colorWipe(uint32_t c, uint8_t wait, int forward) {
+   if(forward == 1) {
+      for(uint16_t i=0; i < wholeStrip.numPixels(); i++) {
+         wholeStrip.setPixelColor(i, c);
+         wholeStrip.show();
+         delay(wait);
+      }
+   } else {
+      for(uint16_t i=wholeStrip.numPixels(); i > 0; i--) {
+         wholeStrip.setPixelColor(i, c);
+         wholeStrip.show();
+         delay(wait);
+      
+      } // end for
+   } // end if
 } // end colorWipe
+
+//==========================================================================
+// Theatre-style crawling lights.
+void theaterChase(uint32_t c, uint8_t wait) {
+  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
+    for (int q=0; q < 3; q++) {
+      for (int i=0; i < wholeStrip.numPixels(); i=i+3) {
+        wholeStrip.setPixelColor(i+q, c);    //turn every third pixel on
+      }
+      wholeStrip.show();
+
+      delay(wait);
+
+      for (int i=0; i < wholeStrip.numPixels(); i=i+3) {
+        wholeStrip.setPixelColor(i+q, 0);        //turn every third pixel off
+      }
+    } // end q loop
+  } // end j loop
+}
+
+//==========================================================================
+//Theatre-style crawling lights with rainbow effect
+void theaterChaseRainbow(uint8_t wait) {
+  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
+    for (int q=0; q < 3; q++) {
+      for (int i=0; i < wholeStrip.numPixels(); i=i+3) {
+        wholeStrip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
+      }
+      wholeStrip.show();
+
+      delay(wait);
+
+      for (int i=0; i < wholeStrip.numPixels(); i=i+3) {
+        wholeStrip.setPixelColor(i+q, 0);        //turn every third pixel off
+      }
+    } // end q loop
+  } // end j loop
+} // end theaterChaseRainbow
+
+
+//===================================================================================
+// converts a HEX color into a matrix color. makes color handling easier.
+uint16_t color(unsigned long c) {
+   byte red = (c & 0xFF0000) >> 16;
+   byte green = ( c & 0x00FF00) >> 8;
+   byte blue = (c & 0x0000FF);
+   return matrix.Color(red, green, blue);
+} // end color
 
 //==========================================================================
 // Wheel: Input a value 0 to 255 to get a color value.
@@ -392,6 +541,24 @@ void lightsOff() {
   wholeStrip.show();
   matrix.fillScreen(0); matrix.show();
 } // end lightsOff;
+
+/*==========================================================================
+   power the lights up or down by way of a relay wired normally open.
+   We set pin LIGHT_POWER_RELAY_PIN to HIGH to power the relay to engerize
+     the strand of lights. We have the relay to keep the lights physically
+     powered down off hours when not in use.
+   Note: This is different than "lightsOff" which just clears the  strand 
+     causing it to show "black"
+  ==========================================================================
+*/
+void powerLights(bool powerUp) {
+    if(powerUp) 
+      { digitalWrite(LIGHT_POWER_RELAY_PIN, HIGH); }
+    else 
+      { digitalWrite(LIGHT_POWER_RELAY_PIN, LOW); }
+    
+} // end powerLights
+
 
 /*===========================================================================
   // figure ou the matrix addressing model
